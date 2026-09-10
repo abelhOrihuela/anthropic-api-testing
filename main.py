@@ -10,36 +10,29 @@ model = "claude-haiku-4-5"
 
 messages = []
 
+
 def add_user_message(messages, text):
-    message = {
-        "role": "user",
-        "content": text
-    }
-
+    message = {"role": "user", "content": text}
     messages.append(message)
+
+
 def add_assistant_message(messages, text):
-    message = {
-        "role": "assistant",
-        "content": text
-    }
-
+    message = {"role": "assistant", "content": text}
     messages.append(message)
 
-def chat(messages, system: None, temperature: 1.0):
+
+def chat(messages, system: None):
 
     params = {
         "model": model,
         "max_tokens": 1000,
         "messages": messages,
-        "temperature": temperature,
     }
 
     if system:
         params["system"] = system
- 
-    message = client.messages.create(
-        **params
-    )
+
+    message = client.messages.create(**params)
     return message.content[0].text
 
 
@@ -65,7 +58,7 @@ while True:
     Do not directly answer student's questions.
     Guide them to a solution step by step.
         """
-    
+
     user_input = input("Type your question: ")
     print(">", user_input)
 
@@ -78,6 +71,3 @@ while True:
     print("----")
     print(answer)
     print("----")
-
-
-

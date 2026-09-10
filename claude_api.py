@@ -10,16 +10,10 @@ class ClaudeClient:
         self.model = model
 
     def add_user_message(self, messages, text):
-        messages.append({
-            "role": "user",
-            "content": text
-        })
+        messages.append({"role": "user", "content": text})
 
     def add_assistant_message(self, messages, text):
-        messages.append({
-            "role": "assistant",
-            "content": text
-        })
+        messages.append({"role": "assistant", "content": text})
 
     def chat(self, messages, system=None, stop_sequences=None):
         params = {

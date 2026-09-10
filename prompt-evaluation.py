@@ -3,7 +3,9 @@ from claude_api import ClaudeClient
 from statistics import mean
 import ast
 import re
+
 client = ClaudeClient()
+
 
 def run_prompt(test_case):
     """
@@ -16,12 +18,13 @@ def run_prompt(test_case):
     * Respond only with Python, json or a plain regex
     * Do not add any comments or explanation
     """
-    
+
     messages = []
     client.add_user_message(messages, prompt)
     client.add_assistant_message(messages, "```code")
     output = client.chat(messages, stop_sequences=["```"])
     return output
+
 
 def validate_json(text):
     try:
@@ -30,7 +33,8 @@ def validate_json(text):
     except json.JSONDecodeError:
         print(f"Error: {text}")
         return 0
-    
+
+
 def validate_python(text):
     try:
         ast.parse(text.strip())
@@ -38,7 +42,8 @@ def validate_python(text):
     except SyntaxError:
         print(f"Error: {text}")
         return 0
-    
+
+
 def validate_regex(text):
     try:
         re.compile(text.strip())
@@ -46,6 +51,7 @@ def validate_regex(text):
     except re.error:
         print(f"Error: {text}")
         return 0
+
 
 def run_eval_model(test_case, output):
     eval_prompt = f"""
@@ -89,6 +95,7 @@ def run_eval_model(test_case, output):
     eval_text = client.chat(messages, stop_sequences=["```"])
     return json.loads(eval_text)
 
+
 def run_code_eval(test_case, output):
     if test_case["format"] == "python":
         return validate_python(output)
@@ -97,27 +104,29 @@ def run_code_eval(test_case, output):
     elif test_case["format"] == "regex":
         return validate_regex(output)
 
+
 def run_test_case(test_case):
     """Calls run_prompt, then grades the result"""
     output = run_prompt(test_case)
-    
+
     # TODO - Grading
     model_grade = run_eval_model(test_case, output)
     score = model_grade["score"]
 
     code_grade = run_code_eval(test_case, output)
-    
+
     return {
         "output": output,
         "test_case": test_case,
         "score": score,
-        "score_code": code_grade
+        "score_code": code_grade,
     }
+
 
 def run_eval(dataset):
     """Loads the dataset and calls run_test_case with each case"""
     results = []
-    
+
     for test_case in dataset:
         result = run_test_case(test_case)
         results.append(result)
@@ -126,8 +135,9 @@ def run_eval(dataset):
     average_score_code = mean([result["score_code"] for result in results])
     print(f"Average score: {average_score}")
     print(f"Average score code: {average_score_code}")
-    
+
     return results
+
 
 with open("dataset.json", "r") as f:
     dataset = json.load(f)

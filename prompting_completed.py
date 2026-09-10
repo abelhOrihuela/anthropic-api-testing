@@ -1,5 +1,3 @@
-
-
 import json
 import concurrent.futures
 import re
@@ -7,6 +5,7 @@ from textwrap import dedent
 from statistics import mean
 from dotenv import load_dotenv
 from anthropic import Anthropic
+
 
 # PromptEvaluator Implementation
 class PromptEvaluator:
