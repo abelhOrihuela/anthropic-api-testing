@@ -15,7 +15,7 @@ class ClaudeClient:
     def add_assistant_message(self, messages, text):
         messages.append({"role": "assistant", "content": text})
 
-    def chat(self, messages, system=None, stop_sequences=None):
+    def chat(self, messages, system=None, stop_sequences=None, tools=None):
         params = {
             "model": self.model,
             "max_tokens": 1000,
@@ -28,5 +28,11 @@ class ClaudeClient:
         if stop_sequences:
             params["stop_sequences"] = stop_sequences
 
+        if tools:
+            params["tools"] = tools
+
+        print(params)
+
         message = self.client.messages.create(**params)
-        return message.content[0].text
+
+        return message.content
