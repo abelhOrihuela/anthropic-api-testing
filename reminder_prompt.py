@@ -1,15 +1,12 @@
-from claude_api import ClaudeClient
 from datetime import datetime, timedelta
-from anthropic.types import ToolParam
+
+from claude_api import ClaudeClient
 
 client = ClaudeClient()
-# system = """
-#     you are a patient math tutor for kinder garden students.
-#     Do not directly answer student's questions.
-#     Guide them to a solution step by step.
-# """
 
 
+def get_current_datetime(date_format="%Y-%m-%d %H:%M:%S"):
+    return datetime.now().strftime(date_format)
 
 
 def add_duration_to_datetime(
@@ -63,10 +60,8 @@ def add_duration_to_datetime(
 def set_reminder(content, timestamp):
     print(f"----\nSetting the following reminder for {timestamp}:\n{content}\n----")
 
-def get_current_datetime(date_format = "%Y-%m-%d %H:%M:%S"):
-    return datetime.now().strftime(date_format)
 
-get_current_datetime_schema = ToolParam({
+GET_CURRENT_DATETIME_SCHEMA = {
     "name": "get_current_datetime",
     "description": "Returns the current date and time formatted according to the specified format",
     "input_schema": {
@@ -75,14 +70,14 @@ get_current_datetime_schema = ToolParam({
             "date_format": {
                 "type": "string",
                 "description": "A string specifying the format of the returned datetime. Uses Python's strftime format codes.",
-                "default": "%Y-%m-%d %H:%M:%S"
+                "default": "%Y-%m-%d %H:%M:%S",
             }
         },
-        "required": []
-    }
-})
+        "required": [],
+    },
+}
 
-add_duration_to_datetime_schema = {
+ADD_DURATION_TO_DATETIME_SCHEMA = {
     "name": "add_duration_to_datetime",
     "description": "Adds a specified duration to a datetime string and returns the resulting datetime in a detailed format. This tool converts an input datetime string to a Python datetime object, adds the specified duration in the requested unit, and returns a formatted string of the resulting datetime. It handles various time units including seconds, minutes, hours, days, weeks, months, and years, with special handling for month and year calculations to account for varying month lengths and leap years. The output is always returned in a detailed format that includes the day of the week, month name, day, year, and time with AM/PM indicator (e.g., 'Thursday, April 03, 2025 10:30:00 AM').",
     "input_schema": {
@@ -109,7 +104,7 @@ add_duration_to_datetime_schema = {
     },
 }
 
-set_reminder_schema = {
+SET_REMINDER_SCHEMA = {
     "name": "set_reminder",
     "description": "Creates a timed reminder that will notify the user at the specified time with the provided content. This tool schedules a notification to be delivered to the user at the exact timestamp provided. It should be used when a user wants to be reminded about something specific at a future point in time. The reminder system will store the content and timestamp, then trigger a notification through the user's preferred notification channels (mobile alerts, email, etc.) when the specified time arrives. Reminders are persisted even if the application is closed or the device is restarted. Users can rely on this function for important time-sensitive notifications such as meetings, tasks, medication schedules, or any other time-bound activities.",
     "input_schema": {
@@ -128,40 +123,57 @@ set_reminder_schema = {
     },
 }
 
-batch_tool_schema = {
-    "name": "batch_tool",
-    "description": "Invoke multiple other tool calls simultaneously",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "invocations": {
-                "type": "array",
-                "description": "The tool calls to invoke",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "description": "The name of the tool to invoke",
-                        },
-                        "arguments": {
-                            "type": "string",
-                            "description": "The arguments to the tool, encoded as a JSON string",
-                        },
-                    },
-                    "required": ["name", "arguments"],
-                },
-            }
-        },
-        "required": ["invocations"],
-    },
+# name -> (schema, handler); keeps each tool's schema and implementation paired
+# so adding a tool can't repeat the earlier bug of a schema with no handler.
+TOOLS = {
+    "get_current_datetime": (GET_CURRENT_DATETIME_SCHEMA, get_current_datetime),
+    "add_duration_to_datetime": (
+        ADD_DURATION_TO_DATETIME_SCHEMA,
+        add_duration_to_datetime,
+    ),
+    "set_reminder": (SET_REMINDER_SCHEMA, set_reminder),
 }
+TOOL_SCHEMAS = [schema for schema, _handler in TOOLS.values()]
+
+
+def run_tool(tool_name, tool_input):
+    _schema, handler = TOOLS[tool_name]
+    return handler(**tool_input)
+
+
+def run_tools(message):
+    tool_result_blocks = []
+
+    for block in message.content:
+        if block.type != "tool_use":
+            continue
+        result = run_tool(block.name, block.input)
+        tool_result_blocks.append(
+            {
+                "type": "tool_result",
+                "tool_use_id": block.id,
+                "content": str(result),
+            }
+        )
+
+    return tool_result_blocks
+
+
+def run_conversation(messages):
+    while True:
+        response = client.chat(messages, tools=TOOL_SCHEMAS)
+        client.add_assistant_message(messages, response)
+        print(client.text_from_message(response))
+
+        if response.stop_reason != "tool_use":
+            break
+
+        tool_result_blocks = run_tools(response)
+        client.add_user_message(messages, tool_result_blocks)
+
+    return messages
+
 
 messages = []
 client.add_user_message(messages, "What is the exact time, formatted as HH:MM:SS?")
-output = client.chat(messages, tools=[get_current_datetime_schema])
-
-client.add_assistant_message(messages, output)
-
-# print(messages)
-print(output)
+run_conversation(messages)

@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from anthropic import Anthropic
+from anthropic.types import Message
 
 load_dotenv()
 
@@ -9,11 +10,21 @@ class ClaudeClient:
         self.client = Anthropic()
         self.model = model
 
-    def add_user_message(self, messages, text):
-        messages.append({"role": "user", "content": text})
+    def add_user_message(self, messages, message):
+        messages.append(
+            {
+                "role": "user",
+                "content": message.content if isinstance(message, Message) else message,
+            }
+        )
 
-    def add_assistant_message(self, messages, text):
-        messages.append({"role": "assistant", "content": text})
+    def add_assistant_message(self, messages, message):
+        messages.append(
+            {
+                "role": "assistant",
+                "content": message.content if isinstance(message, Message) else message,
+            }
+        )
 
     def chat(self, messages, system=None, stop_sequences=None, tools=None):
         params = {
@@ -31,8 +42,11 @@ class ClaudeClient:
         if tools:
             params["tools"] = tools
 
-        print(params)
-
         message = self.client.messages.create(**params)
 
-        return message.content
+        return message
+
+    def text_from_message(self, message):
+        return "\n".join(
+            [block.text for block in message.content if block.type == "text"]
+        )

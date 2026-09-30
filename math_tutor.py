@@ -11,4 +11,4 @@ messages = []
 client.add_user_message(messages, "what is 2+2?")
 output = client.chat(messages, system=system)
 
-print(output)
+print(output.content[0].text)
