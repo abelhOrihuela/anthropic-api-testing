@@ -24,7 +24,8 @@ client.add_user_message(messages, "What time is it right now?")
 response = client.chat(messages, tools=[get_current_time_schema])
 client.add_assistant_message(messages, response)
 
-tool_use_block = next(block for block in response if block.type == "tool_use")
+
+tool_use_block = next(block for block in response.content if block.type == "tool_use")
 result = get_current_time()
 
 messages.append(
@@ -41,4 +42,4 @@ messages.append(
 )
 
 final_response = client.chat(messages, tools=[get_current_time_schema])
-print(final_response[0].text)
+print(final_response)
