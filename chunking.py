@@ -1,3 +1,8 @@
+from voyage_api import VoyageApi
+
+voyage_api = VoyageApi()
+
+
 # Chunk by a set number of charactesr
 def chunk_by_char(text, chunk_size=150, chunk_overlap=20):
     chunks = []
@@ -9,9 +14,7 @@ def chunk_by_char(text, chunk_size=150, chunk_overlap=20):
         chunk_text = text[start_idx:end_idx]
         chunks.append(chunk_text)
 
-        start_idx = (
-            end_idx - chunk_overlap if end_idx < len(text) else len(text)
-        )
+        start_idx = end_idx - chunk_overlap if end_idx < len(text) else len(text)
 
     return chunks
 
@@ -46,9 +49,9 @@ def chunk_by_section(document_text):
     return re.split(pattern, document_text)
 
 
-with open("./report.md", "r") as f:
+with open("./assets/report.md", "r") as f:
     text = f.read()
 
-chunks = chunk_by_char(text)
+chunks = chunk_by_section(text)
 
-[print(chunk + "\n----\n") for chunk in chunks]
+print(voyage_api.generate_embedding(chunks[0]))

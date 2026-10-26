@@ -49,7 +49,9 @@ def run_command(root, command):
         text = path.read_text()
         matches = text.count(command["old_str"])
         if matches == 0:
-            raise ValueError("No match found for replacement. Please check your text and try again.")
+            raise ValueError(
+                "No match found for replacement. Please check your text and try again."
+            )
         if matches > 1:
             raise ValueError(
                 f"Found {matches} matches for replacement text. Please provide more context to make a unique match."
@@ -114,11 +116,17 @@ with tempfile.TemporaryDirectory() as workspace:
 
     # The code doesn't opine: run it and check the number.
     check = subprocess.run(
-        [sys.executable, "-c", "from cart import cart_total; print(cart_total([100, 50], 10))"],
+        [
+            sys.executable,
+            "-c",
+            "from cart import cart_total; print(cart_total([100, 50], 10))",
+        ],
         cwd=root,
         capture_output=True,
         text=True,
         timeout=5,
     )
     print("== Verification ==")
-    print(f"cart_total([100, 50], 10) -> {check.stdout.strip() or check.stderr.strip()}")
+    print(
+        f"cart_total([100, 50], 10) -> {check.stdout.strip() or check.stderr.strip()}"
+    )

@@ -2,11 +2,11 @@ from dotenv import load_dotenv
 from anthropic import Anthropic
 from anthropic.types import Message
 
-load_dotenv()
-
 
 class ClaudeClient:
     def __init__(self, model="claude-haiku-4-5"):
+        load_dotenv()
+
         self.client = Anthropic()
         self.model = model
 

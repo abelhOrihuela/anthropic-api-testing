@@ -5,9 +5,10 @@ name = "pypi"
 
 [packages]
 requests = "*"
-python-dotenv = "*"
 anthropic = "*"
 black = "*"
+voyageai = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
