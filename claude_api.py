@@ -26,12 +26,18 @@ class ClaudeClient:
             }
         )
 
-    def chat(self, messages, system=None, stop_sequences=None, tools=None):
+    def chat(self, messages, system=None, stop_sequences=None, tools=None, thinking =False, thinking_budget=1024):
         params = {
             "model": self.model,
-            "max_tokens": 1000,
+            "max_tokens": 4000,
             "messages": messages,
         }
+
+        if thinking:
+            params["thinking"] = {
+                "type": "enabled",
+                "budget_tokens": thinking_budget
+            }
 
         if system:
             params["system"] = system

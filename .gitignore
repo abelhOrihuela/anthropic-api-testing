@@ -16,3 +16,9 @@ venv/
 
 # generated output
 dataset.json
+
+# node
+node_modules/
+
+# generated digests
+digest-*.md

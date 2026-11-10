@@ -54,4 +54,6 @@ with open("./assets/report.md", "r") as f:
 
 chunks = chunk_by_section(text)
 
+print(chunks[0])
+
 print(voyage_api.generate_embedding(chunks[0]))
